@@ -63,36 +63,37 @@ OUT_DIR = r"..\Out"
 #REGR_INFO_EXP = ("x**-1.7", 1020.0, "x")
 #REGR_INFO_CALC = ("x**0.2", 1020.0, "x**-1")
 
-dataset_exp = { "name": "karoutas001_t1",
-                "dir": EXP_DATA_DIR,
-                "segments_config": ("x**-1.7", 1020.0, "x"),
-                "exclude_filters": () }
-#                }
+dataset_exp = {"name": "karoutas001_t1",
+               "dir": EXP_DATA_DIR,
+               "segments_config": ("x**-1.7", 1020.0, "x"),
+               "exclude_filters": ()}
+#               }
 
-dataset_calc = { "name": "karoutas001_t1",
-                 "dir": CALC_DATA_DIR,
-                 "segments_config": ("x**0.2", 1020.0, "x**-1"),
-                 "exclude_filters": ((2000.0, 3000.0),) }
-#                }
+dataset_calc = {"name": "karoutas001_t1",
+                "dir": CALC_DATA_DIR,
+                "segments_config": ("x**0.2", 1020.0, "x**-1"),
+                "exclude_filters": ((2000.0, 3000.0),)}
+#               }
 
 
 #dataset_exp = { "name": "karoutas001_t2",
 #                "dir": EXP_DATA_DIR,
 #                "segments_config": ("x**-1", 1007.0, "x"),
 #                "exclude_filters": ((2000.0, 3000.0),) }
-##                }
+#                }
 #
 #dataset_calc = { "name": "karoutas001_t2",
 #                 "dir": CALC_DATA_DIR,
 #                 "segments_config": ("x**0.3", 1020.0, "x**-1"),
 #                 "exclude_filters": ((2000.0, 3000.0),) }
-##                }
+#                }
 # ======================================================================================================
 
 Direction = Enum("Direction", "left right")
 
 
-class MyError(Exception): pass
+class MyError(Exception):
+    pass
 
 
 def get_nearest_point(data, x_value, direction):
@@ -108,23 +109,24 @@ def get_nearest_point(data, x_value, direction):
 #        left_point_index = left_bnd
 #    else:
 #        left_point_index = get_nearest_point(data, left_bnd, Direction.right)
-# 
+#
 #    if isinstance(right_bnd, int):
 #        right_point_index = right_bnd
 #    else:
 #        right_point_index = get_nearest_point(data, right_bnd, Direction.left)
-# 
+#
 #    if (left_point_index and right_point_index) in data.index.tolist():
 #        return (left_point_index, right_point_index)
 #    else:
-#        raise MyError("No points to delete in specified range: {!s}".format((left_bnd, right_bnd)))
-# 
-# 
+#        raise MyError("No points to delete in specified range: {!s}"
+#                      .format((left_bnd, right_bnd)))
+#
+#
 #def get_filtred_data(dataset):
 #    data = dataset["data"]
 #    if "exclude_filters" not in dataset: return data
 #    data.index += 1
-# 
+#
 #    try:
 #        for (left_bnd, right_bnd) in dataset["exclude_filters"]:
 #            left_point_index, right_point_index = get_indexes_to_drop(left_bnd, right_bnd, data)
@@ -132,7 +134,7 @@ def get_nearest_point(data, x_value, direction):
 #        data.reset_index(drop=True, inplace=True)
 #        return data
 #    except(ValueError):
-#        raise MyError("No points to delete in specified range: {!s}".format((left_bnd, right_bnd)))    
+#        raise MyError("No points to delete in specified range: {!s}".format((left_bnd, right_bnd)))
 
 
 def get_indexes_to_drop(data, filters):
@@ -153,9 +155,11 @@ def get_indexes_to_drop(data, filters):
                 print(range(left_point_index, right_point_index+1))
                 index_ponit_list.extend(range(left_point_index, right_point_index+1))
             else:
-                raise MyError("Filter {0!s} is out of data range. Data has {1!s} points".format((left_bnd, right_bnd), max(data.index.tolist())))
+                raise MyError("Filter {0!s} is out of data range. Data has {1!s} points"
+                              .format((left_bnd, right_bnd), max(data.index.tolist())))
     except(ValueError):
-        raise MyError("No points to delete in specified range: {!s}".format((left_bnd, right_bnd))) 
+        raise MyError("No points to delete in specified range: {!s}"
+                      .format((left_bnd, right_bnd)))
 
     index_ponit_list = list(set(index_ponit_list))
     return index_ponit_list
@@ -163,7 +167,8 @@ def get_indexes_to_drop(data, filters):
 
 def get_filtred_data(dataset):
     data = dataset["data"]
-    if "exclude_filters" not in dataset: return data
+    if "exclude_filters" not in dataset:
+        return data
     data.index += 1
 
     indexes_points_list = get_indexes_to_drop(data, dataset["exclude_filters"])
@@ -182,23 +187,27 @@ def create_segments(full_data, regr_info):
     full_data_bnd_left = full_data["x"].min()
     full_data_bnd_right = full_data["x"].max()
 
-    x_values = [full_data_bnd_left] + [float(val) for val in regr_info if not isinstance(val, str)] + [full_data_bnd_right]
+    x_values = [full_data_bnd_left] +\
+               [float(val) for val in regr_info if not isinstance(val, str)] +\
+               [full_data_bnd_right]
 
     regr_functions = [val for val in regr_info if isinstance(val, str)]
 
     segments = []
     for (index, regr_func) in enumerate(regr_functions):
-        segment = {"regr_func": regr_func, "bnd_left": x_values[index], "bnd_right": x_values[index+1]}
+        segment = {"regr_func": regr_func,
+                   "bnd_left": x_values[index],
+                   "bnd_right": x_values[index+1]}
         segments.append(segment)
 
     segments = add_data_to_segments(segments, full_data)
-
     return segments
 
 
 def add_data_to_segments(segments, full_data):
     for segment in segments:
-        segment_data = full_data[ (segment["bnd_left"] <= full_data["x"])  &  (full_data["x"] <= segment["bnd_right"]) ]
+        segment_data = full_data[(segment["bnd_left"] <= full_data["x"]) &
+                                 (full_data["x"] <= segment["bnd_right"])]
         segment_data = segment_data.reset_index(drop=True)
         segment["segment_data"] = segment_data
     return segments
@@ -218,13 +227,16 @@ def plot_segments(full_data, segments):
 
     for segment in segments:
         N_PREDICT_POINTS = 100
-        prediction_points = np.linspace(segment["bnd_left"], segment["bnd_right"], N_PREDICT_POINTS)
+        prediction_points = np.linspace(segment["bnd_left"],
+                                        segment["bnd_right"],
+                                        N_PREDICT_POINTS)
         prediction_points = pd.Series(prediction_points, name="x")
 
         regr_result = rg.ols_fit(segment["regr_func"], segment["segment_data"])
         prediction = rg.get_prediction(regr_result, prediction_points, verbose=True)
 
-        label = "OLS prediction: ({}-{})".format(round(segment["bnd_left"], 1), round(segment["bnd_right"], 1))
+        label = "OLS prediction: ({}-{})".format(round(segment["bnd_left"], 1),
+                                                 round(segment["bnd_right"], 1))
         ax.plot(prediction["x"], prediction["mean"], '-', label=label)
         ax.legend(loc="best")
 
@@ -247,11 +259,17 @@ if __name__ == "__main__":
     segment_num = 0
     for segment_exp, segment_calc in ziped_segments:
         prediction_points_exp = segment_exp["segment_data"]["x"]
-        prediction_exp = get_prediction(dataset_exp["name"], segment_exp["regr_func"], segment_exp["segment_data"], prediction_points_exp)
+        prediction_exp = get_prediction(dataset_exp["name"],
+                                        segment_exp["regr_func"],
+                                        segment_exp["segment_data"],
+                                        prediction_points_exp)
         prediction_exp["mean"].name = "mean_exp"
 
         prediction_points_calc = segment_exp["segment_data"]["x"]
-        prediction_calc = get_prediction(dataset_calc["name"], segment_calc["regr_func"], segment_calc["segment_data"], prediction_points_calc)
+        prediction_calc = get_prediction(dataset_calc["name"],
+                                         segment_calc["regr_func"],
+                                         segment_calc["segment_data"],
+                                         prediction_points_calc)
         prediction_calc["mean"].name = "mean_calc"
 
         segment_exp["segment_data"]["y"].name = "exp"
@@ -268,7 +286,7 @@ if __name__ == "__main__":
                                  prediction_exp["mean_ci_upper"],
                                  prediction_exp["mean_se_lower"],
                                  prediction_exp["mean_se_upper"]],
-                                 axis=1)
+                                axis=1)
 
         print(predictions)
 
