@@ -1,4 +1,4 @@
 __pycache__
-.pyc
+*.pyc
 process_regr_calc_result.py
 process.py
