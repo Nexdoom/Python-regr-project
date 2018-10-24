@@ -64,6 +64,19 @@ OUT_DIR = r"..\Out"
 #REGR_INFO_EXP = ("x**-1.7", 1020.0, "x")
 #REGR_INFO_CALC = ("x**0.2", 1020.0, "x**-1")
 
+#dataset_calc = {"name": "Empty",
+#                "dir": CALC_DATA_DIR,
+#                "exclude_filters": ((1, 5),),
+#                "segments_config": ("x**0.2", 1020.0, "x**-1")}
+
+
+#dataset_exp = {"name": "karoutas001_t1",
+#               "dir": EXP_DATA_DIR,
+#               "segments_config": ("x**-1.7", 1020.0, "x"),
+#               "exclude_filters": ((1000.0, 2000.0),)}
+##               }
+
+
 dataset_exp = {"name": "karoutas001_t1",
                "dir": EXP_DATA_DIR,
                "segments_config": ("x**-1.7", 1020.0, "x"),
@@ -73,7 +86,7 @@ dataset_exp = {"name": "karoutas001_t1",
 dataset_calc = {"name": "karoutas001_t1",
                 "dir": CALC_DATA_DIR,
                 "segments_config": ("x**0.2", 1020.0, "x**-1"),
-                "exclude_filters": ((2000.0, 3000.0), (1500.0, 900.0),)}
+                "exclude_filters": ((2000.0, 3000.0),)}
 #               }
 
 
@@ -148,7 +161,7 @@ def get_point_indexes_to_drop(data, filters):
 
         if (left_point_index < data.index.min()) or (right_point_index > data.index.max()):
             raise CommonError("Filter {0!s} exceeds data range. Data has {1!s} points"
-                          .format(initial_filter_desc, max(data.index.tolist())))
+                          .format(initial_filter_desc, data.index.max()))
 
         point_indexes.extend(range(left_point_index, right_point_index+1))
 
@@ -170,6 +183,7 @@ def get_filtred_data(dataset):
     data = data.drop(point_indexes_to_drop)
 
     data.reset_index(drop=True, inplace=True)
+
     return data
 
 
@@ -202,50 +216,77 @@ def add_data_to_segments(segments, full_data):
         segment_data = full_data[(segment["bnd_left"] <= full_data["x"]) &
                                  (full_data["x"] <= segment["bnd_right"])]
         segment_data = segment_data.reset_index(drop=True)
+
+        if segment_data.empty == True:
+            raise CommonError("Segment starting at {!s} is empty".format(segment["bnd_left"]))
+
         segment["segment_data"] = segment_data
     return segments
 
 
-def get_prediction(data_name, regr_func, data, prediction_points):
+def get_prediction(data_name, regr_func, data, prediction_points, display_result = True):
     regr_result = rg.ols_fit(regr_func, data)
     predictions = rg.get_prediction(regr_result, prediction_points, verbose=True)
-#    rg.output_regress_results(data_name, data, regr_result)
-#    rg.plot_prediction_data(predictions)
+
+    if display_result == False:
+        return predictions
+
+    rg.output_regress_results(data_name, data, regr_result)
+    rg.plot_prediction_data(predictions)
+
     return predictions
 
 
-def plot_segments(full_data, segments):
-    fig, ax = plt.subplots(figsize=(12, 8))
-    ax.plot(full_data["x"], full_data["y"], 'o', label="Data")
+def add_data_and_segments(datasets):
+    for dataset in datasets:
+        dataset["data"] = rg.load_data_csv(dataset["dir"], dataset["name"], sep=";")
+    
+        if dataset["data"].empty == True:
+            raise CommonError("File {!s} is empty".format(dataset["name"] + ".csv"))
+    
+        dataset["data"] = get_filtred_data(dataset)
+    
+        dataset["segments"] = create_segments(dataset["data"], dataset["segments_config"])
+    
+    return datasets
 
-    for segment in segments:
-        N_PREDICT_POINTS = 100
-        prediction_points = np.linspace(segment["bnd_left"],
-                                        segment["bnd_right"],
-                                        N_PREDICT_POINTS)
-        prediction_points = pd.Series(prediction_points, name="x")
 
-        regr_result = rg.ols_fit(segment["regr_func"], segment["segment_data"])
-        prediction = rg.get_prediction(regr_result, prediction_points, verbose=True)
+def plot_segments(datasets):
+    for dataset in datasets:
+        full_data = dataset["data"]
+        segments = dataset["segments"]
+        
+        fig, ax = plt.subplots(figsize=(12, 8))
+        ax.plot(full_data["x"], full_data["y"], 'o', label="Data")
 
-        label = "OLS prediction: ({}-{})".format(round(segment["bnd_left"], 1),
-                                                 round(segment["bnd_right"], 1))
-        ax.plot(prediction["x"], prediction["mean"], '-', label=label)
-        ax.legend(loc="best")
+        for segment in segments:
+            N_PREDICT_POINTS = 100
+            prediction_points = np.linspace(segment["bnd_left"],
+                                            segment["bnd_right"],
+                                            N_PREDICT_POINTS)
+            prediction_points = pd.Series(prediction_points, name="x")
+    
+            regr_result = rg.ols_fit(segment["regr_func"], segment["segment_data"])
+            prediction = rg.get_prediction(regr_result, prediction_points, verbose=True)
+    
+            label = "OLS prediction: ({}-{})".format(round(segment["bnd_left"], 1),
+                                                     round(segment["bnd_right"], 1))
+            ax.plot(prediction["x"], prediction["mean"], '-', label=label)
+            ax.legend(loc="best")
 
 
 if __name__ == "__main__":
-    dataset_exp["data"] = rg.load_data_csv(dataset_exp["dir"], dataset_exp["name"], sep=";")
-    dataset_calc["data"] = rg.load_data_csv(dataset_calc["dir"], dataset_calc["name"], sep=";")
+    datasets = (dataset_exp, dataset_calc)
 
-    dataset_exp["data"] = get_filtred_data(dataset_exp)
-    dataset_calc["data"] = get_filtred_data(dataset_calc)
+    datasets = add_data_and_segments(datasets)
 
-    dataset_exp["segments"] = create_segments(dataset_exp["data"], dataset_exp["segments_config"])
-    dataset_calc["segments"] = create_segments(dataset_calc["data"], dataset_calc["segments_config"])
+    plot_segments(datasets)
 
-    plot_segments(dataset_exp["data"], dataset_exp["segments"])
-    plot_segments(dataset_calc["data"], dataset_calc["segments"])
+#    dataset_exp = add_data_and_segments(dataset_exp)
+#    dataset_calc = add_data_and_segments(dataset_calc)
+#
+#    plot_segments(dataset_exp["data"], dataset_exp["segments"])
+#    plot_segments(dataset_calc["data"], dataset_calc["segments"])
 
 #    ziped_segments = zip(dataset_exp["segments"], dataset_calc["segments"])
 #
