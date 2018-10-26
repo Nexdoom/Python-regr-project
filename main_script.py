@@ -79,14 +79,16 @@ OUT_DIR = r"..\Out"
 
 dataset_exp = {"name": "karoutas001_t1",
                "dir": EXP_DATA_DIR,
-               "segments_config": ("x**-1.7", 1020.0, "x"),
-               "exclude_filters": ()}
+               "exclude_filters": (),
+               "segments_config": ("x**-1.7", 1023.0, "x"),
+               "prediction_points_src": "exp"}
 #               }
 
 dataset_calc = {"name": "karoutas001_t1",
                 "dir": CALC_DATA_DIR,
-                "segments_config": ("x**0.2", 1020.0, "x**-1"),
-                "exclude_filters": ((2000.0, 3000.0),)}
+                "exclude_filters": ((2000.0, 3000.0),),
+                "segments_config": ("x**0.2"),
+                "prediction_points_src": "calc"}
 #               }
 
 
@@ -111,6 +113,10 @@ class CommonError(Exception):
 
 
 class RegrError(Exception):
+    pass
+
+
+class PredictError(Exception):
     pass
 
 
@@ -237,17 +243,63 @@ def get_prediction(data_name, regr_func, data, prediction_points, display_result
     return predictions
 
 
+def add_prediction_point_to_data(datasets):
+    dataset_exp, dataset_calc = datasets[:]
+
+    if dataset_exp["prediction_points_src"] == "exp":
+        dataset_exp["data"] = dataset_exp["data"].assign(predict_points = dataset_exp["data"].x)
+    elif dataset_exp["prediction_points_src"] == "calc":
+        dataset_exp["data"] = dataset_exp["data"].assign(predict_points = dataset_calc["data"].x)
+    else:
+        raise PredictError("Invalid value")
+
+    if dataset_calc["prediction_points_src"] == "calc":
+        dataset_calc["data"] = dataset_calc["data"].assign(predict_points = dataset_calc["data"].x)
+    elif dataset_calc["prediction_points_src"] == "exp":
+        dataset_calc["data"] = dataset_calc["data"].assign(predict_points = dataset_exp["data"].x)
+    else:
+        raise PredictError("Invalid value")
+
+    return datasets
+
+
+#def add_prediction_point_to_segments(datasets):
+#    dataset_exp, dataset_calc = datasets[:]
+#
+#    ziped_segments = zip(dataset_exp["segments"], dataset_calc["segments"])
+#
+#    for segment_exp, segment_calc in ziped_segments:
+#        if dataset_exp["prediction_points_src"] == "exp":
+#            segment_exp["segment_pridiction_point"] = segment_exp["segment_data"]["x"]
+#        elif dataset_exp["prediction_points_src"] == "calc":
+#            segment_exp["segment_pridiction_point"] = segment_calc["segment_data"]["x"]
+#        else:
+#            raise PredictError("Invalid value")
+#
+#        if dataset_calc["prediction_points_src"] == "calc":
+#            segment_calc["segment_pridiction_point"] = segment_calc["segment_data"]["x"]
+#        elif dataset_calc["prediction_points_src"] == "exp":
+#            segment_calc["segment_pridiction_point"] = segment_exp["segment_data"]["x"]
+#        else:
+#            raise PredictError("Invalid value")
+#
+#    return datasets
+
+
 def add_data_and_segments(datasets):
     for dataset in datasets:
         dataset["data"] = rg.load_data_csv(dataset["dir"], dataset["name"], sep=";")
-    
+
         if dataset["data"].empty == True:
             raise CommonError("File {!s} is empty".format(dataset["name"] + ".csv"))
-    
+
         dataset["data"] = get_filtred_data(dataset)
-    
+
+    datasets = add_prediction_point_to_data(datasets)
+
+    for dataset in datasets:
         dataset["segments"] = create_segments(dataset["data"], dataset["segments_config"])
-    
+
     return datasets
 
 
@@ -255,7 +307,7 @@ def plot_segments(datasets):
     for dataset in datasets:
         full_data = dataset["data"]
         segments = dataset["segments"]
-        
+
         fig, ax = plt.subplots(figsize=(12, 8))
         ax.plot(full_data["x"], full_data["y"], 'o', label="Data")
 
@@ -265,10 +317,10 @@ def plot_segments(datasets):
                                             segment["bnd_right"],
                                             N_PREDICT_POINTS)
             prediction_points = pd.Series(prediction_points, name="x")
-    
+
             regr_result = rg.ols_fit(segment["regr_func"], segment["segment_data"])
             prediction = rg.get_prediction(regr_result, prediction_points, verbose=True)
-    
+
             label = "OLS prediction: ({}-{})".format(round(segment["bnd_left"], 1),
                                                      round(segment["bnd_right"], 1))
             ax.plot(prediction["x"], prediction["mean"], '-', label=label)
@@ -280,35 +332,29 @@ if __name__ == "__main__":
 
     datasets = add_data_and_segments(datasets)
 
+    print(datasets)
+
     plot_segments(datasets)
 
-#    dataset_exp = add_data_and_segments(dataset_exp)
-#    dataset_calc = add_data_and_segments(dataset_calc)
-#
-#    plot_segments(dataset_exp["data"], dataset_exp["segments"])
-#    plot_segments(dataset_calc["data"], dataset_calc["segments"])
-
-#    ziped_segments = zip(dataset_exp["segments"], dataset_calc["segments"])
-#
-#    segment_num = 0
-#    for segment_exp, segment_calc in ziped_segments:
-#        prediction_points_exp = segment_exp["segment_data"]["x"]
+#    for dataset in datasets:
+#        for segment in dataset["segments"]:
+#        segment_num = 0
+#    
 #        prediction_exp = get_prediction(dataset_exp["name"],
 #                                        segment_exp["regr_func"],
 #                                        segment_exp["segment_data"],
 #                                        prediction_points_exp)
 #        prediction_exp["mean"].name = "mean_exp"
-#
-#        prediction_points_calc = segment_exp["segment_data"]["x"]
+#    
 #        prediction_calc = get_prediction(dataset_calc["name"],
 #                                         segment_calc["regr_func"],
 #                                         segment_calc["segment_data"],
 #                                         prediction_points_calc)
 #        prediction_calc["mean"].name = "mean_calc"
-#
+#    
 #        segment_exp["segment_data"]["y"].name = "exp"
 #        segment_calc["segment_data"]["y"].name = "CORTES"
-#
+#    
 #        predictions = pd.concat([prediction_exp["x"],
 #                                 segment_calc["segment_data"]["y"],
 #                                 segment_exp["segment_data"]["y"],
@@ -321,9 +367,9 @@ if __name__ == "__main__":
 #                                 prediction_exp["mean_se_lower"],
 #                                 prediction_exp["mean_se_upper"]],
 #                                axis=1)
-#
+#    
 #        print(predictions)
-#
+#    
 #        segment_num += 1
 #        segment_exp_name = "{}_segm_{}".format(dataset_exp["name"], str(segment_num))
 #        srv.save_dataframe_csv(OUT_DIR, segment_exp_name, predictions, sep=";")
