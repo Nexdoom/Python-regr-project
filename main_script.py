@@ -70,13 +70,6 @@ OUT_DIR = r"..\Out"
 #                "segments_config": ("x**0.2", 1020.0, "x**-1")}
 
 
-#dataset_exp = {"name": "karoutas001_t1",
-#               "dir": EXP_DATA_DIR,
-#               "segments_config": ("x**-1.7", 1020.0, "x"),
-#               "exclude_filters": ((1000.0, 2000.0),)}
-##               }
-
-
 dataset_exp = {"name": "karoutas001_t1",
                "dir": EXP_DATA_DIR,
                "exclude_filters": (),
@@ -87,7 +80,7 @@ dataset_exp = {"name": "karoutas001_t1",
 dataset_calc = {"name": "karoutas001_t1",
                 "dir": CALC_DATA_DIR,
                 "exclude_filters": ((2000.0, 3000.0),),
-                "segments_config": ("x**0.2"),
+                "segments_config": ("x**0.2", 1023.0, "x**-1"),
                 "prediction_points_src": "calc"}
 #               }
 
@@ -230,7 +223,9 @@ def add_data_to_segments(segments, full_data):
     return segments
 
 
-def get_prediction(data_name, regr_func, data, prediction_points, display_result = True):
+def get_prediction(data_name, regr_func, data, prediction_points, display_result=True):
+    prediction_points.name = 'x'
+
     regr_result = rg.ols_fit(regr_func, data)
     predictions = rg.get_prediction(regr_result, prediction_points, verbose=True)
 
@@ -258,7 +253,7 @@ def add_prediction_point_to_data(datasets):
     elif dataset_calc["prediction_points_src"] == "exp":
         dataset_calc["data"] = dataset_calc["data"].assign(predict_points = dataset_exp["data"].x)
     else:
-        raise PredictError("Invalid value")
+        raise PredictError("Invalid value in \"prediction_points_src\"")
 
     return datasets
 
@@ -303,6 +298,50 @@ def add_data_and_segments(datasets):
     return datasets
 
 
+def add_prediction_result(datasets):
+    for dataset in datasets:
+        for segment in dataset["segments"]:
+            prediction = get_prediction(dataset["name"],
+                                        segment["regr_func"],
+                                        segment["segment_data"],
+                                        segment["segment_data"]["predict_points"],
+                                        display_result=False)
+
+            segment["prediction"] = prediction
+
+    return datasets
+
+
+def save_prediction(datasets):
+    dataset_exp, dataset_calc = datasets[:]
+
+    ziped_segments = zip(dataset_exp["segments"], dataset_calc["segments"])
+
+    segment_num = 0
+    for segment_exp, segment_calc in ziped_segments:
+        segment_exp["segment_data"]["y"].name = "exp"
+        segment_calc["segment_data"]["y"].name = "CORTES"
+
+        predictions = pd.concat([segment_exp["prediction"]["x"],
+                                 segment_calc["segment_data"]["y"],
+                                 segment_exp["segment_data"]["y"],
+                                 segment_exp["prediction"]["mean"],
+                                 segment_exp["prediction"]["deriv"],
+                                 segment_exp["prediction"]["mean_ci"],
+                                 segment_exp["prediction"]["mean_se"],
+                                 segment_exp["prediction"]["mean_ci_lower"],
+                                 segment_exp["prediction"]["mean_ci_upper"],
+                                 segment_exp["prediction"]["mean_se_lower"],
+                                 segment_exp["prediction"]["mean_se_upper"]],
+                                axis=1)
+
+        print(predictions)
+
+        segment_num += 1
+        segment_exp_name = "{}_segm_{}".format(dataset_exp["name"], str(segment_num))
+        srv.save_dataframe_csv(OUT_DIR, segment_exp_name, predictions, sep=";")
+
+
 def plot_segments(datasets):
     for dataset in datasets:
         full_data = dataset["data"]
@@ -332,44 +371,8 @@ if __name__ == "__main__":
 
     datasets = add_data_and_segments(datasets)
 
-    print(datasets)
-
     plot_segments(datasets)
 
-#    for dataset in datasets:
-#        for segment in dataset["segments"]:
-#        segment_num = 0
-#    
-#        prediction_exp = get_prediction(dataset_exp["name"],
-#                                        segment_exp["regr_func"],
-#                                        segment_exp["segment_data"],
-#                                        prediction_points_exp)
-#        prediction_exp["mean"].name = "mean_exp"
-#    
-#        prediction_calc = get_prediction(dataset_calc["name"],
-#                                         segment_calc["regr_func"],
-#                                         segment_calc["segment_data"],
-#                                         prediction_points_calc)
-#        prediction_calc["mean"].name = "mean_calc"
-#    
-#        segment_exp["segment_data"]["y"].name = "exp"
-#        segment_calc["segment_data"]["y"].name = "CORTES"
-#    
-#        predictions = pd.concat([prediction_exp["x"],
-#                                 segment_calc["segment_data"]["y"],
-#                                 segment_exp["segment_data"]["y"],
-#                                 prediction_exp["mean"],
-#                                 prediction_exp["deriv"],
-#                                 prediction_exp["mean_ci"],
-#                                 prediction_exp["mean_se"],
-#                                 prediction_exp["mean_ci_lower"],
-#                                 prediction_exp["mean_ci_upper"],
-#                                 prediction_exp["mean_se_lower"],
-#                                 prediction_exp["mean_se_upper"]],
-#                                axis=1)
-#    
-#        print(predictions)
-#    
-#        segment_num += 1
-#        segment_exp_name = "{}_segm_{}".format(dataset_exp["name"], str(segment_num))
-#        srv.save_dataframe_csv(OUT_DIR, segment_exp_name, predictions, sep=";")
+    datasets = add_prediction_result(datasets)
+
+    save_prediction(datasets)
