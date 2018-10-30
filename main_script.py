@@ -7,13 +7,13 @@ from enum import Enum
 import regression as rg
 import service as srv
 
-# ======================================================================================================
+# ========================================================================
 
 EXP_DATA_DIR = r"..\!Data\Exp"
 CALC_DATA_DIR = r"..\!Data\Calc"
 OUT_DIR = r"..\Out"
 
-# ======================================================================================================
+# ========================================================================
 
 #EXP_NAME = "tg_tanaka_exp_f"
 #REGR_FUNC_CALC = "x"
@@ -59,10 +59,6 @@ OUT_DIR = r"..\Out"
 #REGR_FUNC_CALC = "x"
 #REGR_FUNC_EXP = "x"
 
-#REGR_INFO = "x**-1.5"
-#REGR_INFO_EXP = ("x**-1.7", 1025.0, "x", 1600.0, "x")
-#REGR_INFO_EXP = ("x**-1.7", 1020.0, "x")
-#REGR_INFO_CALC = ("x**0.2", 1020.0, "x**-1")
 
 #dataset_calc = {"name": "Empty",
 #                "dir": CALC_DATA_DIR,
@@ -70,38 +66,53 @@ OUT_DIR = r"..\Out"
 #                "segments_config": ("x**0.2", 1020.0, "x**-1")}
 
 
-dataset_exp = {"name": "karoutas001_t1",
-               "dir": EXP_DATA_DIR,
-               "exclude_filters": (),
-               "segments_config": ("x**-1.7", 1023.0, "x"),
-               "prediction_points_src": "exp"}
-#               }
+#dataset_exp = {"name": "karoutas001_t1",
+#               "dir": EXP_DATA_DIR,
+#               "exclude_filters": (),
+#               "segments_config": ("x**-1.7", 1023.0, "x"),
+#               "prediction_points_src": "exp"}
 
-dataset_calc = {"name": "karoutas001_t1",
-                "dir": CALC_DATA_DIR,
-                "exclude_filters": ((2000.0, 3000.0),),
-                "segments_config": ("x**0.2", 1023.0, "x**-1"),
-                "prediction_points_src": "calc"}
-#               }
+#dataset_calc = {"name": "karoutas001_t1",
+#                "dir": CALC_DATA_DIR,
+#                "exclude_filters": ((2000.0, 3000.0),),
+#                "segments_config": ("x**0.2", 1023.0, "x**-1"),
+#                "prediction_points_src": "calc"}
 
 
 #dataset_exp = { "name": "karoutas001_t2",
 #                "dir": EXP_DATA_DIR,
+#                "exclude_filters": ((2000.0, 3000.0),),
 #                "segments_config": ("x**-1", 1007.0, "x"),
-#                "exclude_filters": ((2000.0, 3000.0),) }
-#                }
+#                "prediction_points_src": "exp"}
 #
 #dataset_calc = { "name": "karoutas001_t2",
 #                 "dir": CALC_DATA_DIR,
+#                 "exclude_filters": ((2000.0, 3000.0),),
 #                 "segments_config": ("x**0.3", 1020.0, "x**-1"),
-#                 "exclude_filters": ((2000.0, 3000.0),) }
-#                }
-# ======================================================================================================
+#                 "prediction_points_src": "calc"}
+
+
+dataset_exp = {"name": "karoutas001_t3",
+               "dir": EXP_DATA_DIR,
+               "exclude_filters": ((21, -1),),
+               "segments_config": ("x**-1", 1007.0, "x"),
+               "prediction_points_src": "exp",
+               "output_regr_and_predict": True}
+
+dataset_calc = {"name": "karoutas001_t3",
+                "dir": CALC_DATA_DIR,
+                "exclude_filters": ((21, -1),),
+                "segments_config": ("x**0.3", 1020.0, "x**-1"),
+                "prediction_points_src": "calc",
+                "output_regr_and_predict": False}
+
+
+# ========================================================================
 
 Direction = Enum("Direction", "left right")
 
 
-class CommonError(Exception):
+class InputDataError(Exception):
     pass
 
 
@@ -138,12 +149,13 @@ def get_point_indexes_to_drop(data, filters):
                 right_bnd = get_nearest_point_index(data, initial_right_bnd, Direction.left)
             else:
                 right_bnd = initial_right_bnd
-
         except(ValueError):
-            raise CommonError("No points to delete in specified range: {}".format(initial_filter_desc))
+            raise InputDataError("No points to delete in specified range: {}"
+                              .format(initial_filter_desc))
 
-        if left_bnd > right_bnd:
-            raise CommonError("Boundaries are not ascending in specified range: {!s}".format(initial_filter_desc))
+        if (left_bnd > right_bnd) and (right_bnd != -1):
+            raise InputDataError("Boundaries are not ascending in specified range: {!s}"
+                              .format(initial_filter_desc))
 
         if left_bnd == -1:
             left_point_index = data.index.min()
@@ -156,11 +168,12 @@ def get_point_indexes_to_drop(data, filters):
             right_point_index = right_bnd
 
         if (left_point_index == 0) or (right_point_index == 0):
-            raise CommonError("Zero boundary error. Boundary=0 in specified range: {}".format(initial_filter_desc))
+            raise InputDataError("Zero boundary error. Boundary=0 in specified range: {}"
+                              .format(initial_filter_desc))
 
         if (left_point_index < data.index.min()) or (right_point_index > data.index.max()):
-            raise CommonError("Filter {0!s} exceeds data range. Data has {1!s} points"
-                          .format(initial_filter_desc, data.index.max()))
+            raise InputDataError("Filter {0!s} exceeds data range. Data has {1!s} points"
+                              .format(initial_filter_desc, data.index.max()))
 
         point_indexes.extend(range(left_point_index, right_point_index+1))
 
@@ -217,25 +230,26 @@ def add_data_to_segments(segments, full_data):
         segment_data = segment_data.reset_index(drop=True)
 
         if segment_data.empty == True:
-            raise CommonError("Segment starting at {!s} is empty".format(segment["bnd_left"]))
+            raise InputDataError("Segment starting at {!s} is empty".format(segment["bnd_left"]))
 
         segment["segment_data"] = segment_data
     return segments
 
 
-def get_prediction(data_name, regr_func, data, prediction_points, display_result=True):
+def get_prediction(data_name, regr_func, data, prediction_points, output_result=True):
     prediction_points.name = 'x'
 
     regr_result = rg.ols_fit(regr_func, data)
     predictions = rg.get_prediction(regr_result, prediction_points, verbose=True)
 
-    if display_result == False:
+    if output_result == True:
+        rg.output_regress_results(data_name, data, regr_result)
+        rg.plot_prediction_data(predictions)
         return predictions
-
-    rg.output_regress_results(data_name, data, regr_result)
-    rg.plot_prediction_data(predictions)
-
-    return predictions
+    elif output_result == False:
+        return predictions
+    else:
+        raise InputDataError("Option: \"output_regr_and_predict\" is incorrect")
 
 
 def add_prediction_point_to_data(datasets):
@@ -286,7 +300,7 @@ def add_data_and_segments(datasets):
         dataset["data"] = rg.load_data_csv(dataset["dir"], dataset["name"], sep=";")
 
         if dataset["data"].empty == True:
-            raise CommonError("File {!s} is empty".format(dataset["name"] + ".csv"))
+            raise InputDataError("File {!s} is empty".format(dataset["name"] + ".csv"))
 
         dataset["data"] = get_filtred_data(dataset)
 
@@ -305,7 +319,7 @@ def add_prediction_result(datasets):
                                         segment["regr_func"],
                                         segment["segment_data"],
                                         segment["segment_data"]["predict_points"],
-                                        display_result=False)
+                                        output_result=dataset.get("output_regr_and_predict"))
 
             segment["prediction"] = prediction
 
@@ -347,7 +361,7 @@ def plot_segments(datasets):
         full_data = dataset["data"]
         segments = dataset["segments"]
 
-        fig, ax = plt.subplots(figsize=(12, 8))
+        _, ax = plt.subplots(figsize=(12, 8))
         ax.plot(full_data["x"], full_data["y"], 'o', label="Data")
 
         for segment in segments:
