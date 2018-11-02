@@ -2,10 +2,9 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from enum import Enum
 
 import regression as rg
-import service as srv
+import data_processing as dproc
 
 # ========================================================================
 
@@ -63,297 +62,309 @@ OUT_DIR = r"..\Out"
 #dataset_calc = {"name": "Empty",
 #                "dir": CALC_DATA_DIR,
 #                "exclude_filters": ((1, 5),),
-#                "segments_config": ("x**0.2", 1020.0, "x**-1")}
+#                "segments_config": ("x**0.2", 1020.0, "x**-1"),
+#                "output_regr_and_predict": True}
 
 
 #dataset_exp = {"name": "karoutas001_t1",
 #               "dir": EXP_DATA_DIR,
 #               "exclude_filters": (),
 #               "segments_config": ("x**-1.7", 1023.0, "x"),
-#               "prediction_points_src": "exp"}
-
+#               "prediction_points_src": "exp",
+#               "output_regr_and_predict": True}
+#
 #dataset_calc = {"name": "karoutas001_t1",
 #                "dir": CALC_DATA_DIR,
 #                "exclude_filters": ((2000.0, 3000.0),),
 #                "segments_config": ("x**0.2", 1023.0, "x**-1"),
-#                "prediction_points_src": "calc"}
+#                "prediction_points_src": "calc",
+#                "output_regr_and_predict": True}
 
 
 #dataset_exp = { "name": "karoutas001_t2",
 #                "dir": EXP_DATA_DIR,
 #                "exclude_filters": ((2000.0, 3000.0),),
 #                "segments_config": ("x**-1", 1007.0, "x"),
-#                "prediction_points_src": "exp"}
+#                "prediction_points_src": "exp",
+#                "output_regr_and_predict": True}
 #
 #dataset_calc = { "name": "karoutas001_t2",
 #                 "dir": CALC_DATA_DIR,
 #                 "exclude_filters": ((2000.0, 3000.0),),
 #                 "segments_config": ("x**0.3", 1020.0, "x**-1"),
-#                 "prediction_points_src": "calc"}
+#                 "prediction_points_src": "calc",
+#                 "output_regr_and_predict": True}
 
 
-dataset_exp = {"name": "karoutas001_t3",
-               "dir": EXP_DATA_DIR,
-               "exclude_filters": ((21, -1),),
-               "segments_config": ("x**-1", 1007.0, "x"),
-               "prediction_points_src": "exp",
-               "output_regr_and_predict": True}
+#dataset_exp = {"name": "karoutas001_t3",
+#               "dir": EXP_DATA_DIR,
+#               "exclude_filters": ((21, -1),),
+#               "segments_config": ("x**-0.8", 1003.0, "x"),
+#               "prediction_points_src": "exp",
+#               "output_regr_and_predict": True}
+#
+#dataset_calc = {"name": "karoutas001_t3",
+#                "dir": CALC_DATA_DIR,
+#                "exclude_filters": ((21, -1),),
+#                "segments_config": ("x**0.4", 1003.0, "x**-1"),
+#                "prediction_points_src": "calc",
+#                "output_regr_and_predict": True}
 
-dataset_calc = {"name": "karoutas001_t3",
-                "dir": CALC_DATA_DIR,
-                "exclude_filters": ((21, -1),),
-                "segments_config": ("x**0.3", 1020.0, "x**-1"),
-                "prediction_points_src": "calc",
-                "output_regr_and_predict": False}
+
+#dataset_exp = {"name": "karoutas001_t4",
+#               "dir": EXP_DATA_DIR,
+#               "exclude_filters": ((21, 21),),
+#               "segments_config": ("x**-0.8", 943.0, "x"),
+#               "prediction_points_src": "exp",
+#               "output_regr_and_predict": True}
+#
+#dataset_calc = {"name": "karoutas001_t4",
+#                "dir": CALC_DATA_DIR,
+#                "exclude_filters": ((21, 21),),
+#                "segments_config": ("x**0.9", 943.0, "x**-1"),
+#                "prediction_points_src": "calc",
+#                "output_regr_and_predict": True}
 
 
+#dataset_exp = {"name": "karoutas002_t1",
+#               "dir": EXP_DATA_DIR,
+#               "exclude_filters": ((1900.0, -1),),
+#               "segments_config": ("x**-0.4", 940.0, "x"),
+#               "prediction_points_src": "exp",
+#               "output_regr_and_predict": True}
+#
+#dataset_calc = {"name": "karoutas002_t1",
+#                "dir": CALC_DATA_DIR,
+#                "exclude_filters": ((1900.0, -1),),
+#                "segments_config": ("x**0.4", 940.0, "x**-1"),
+#                "prediction_points_src": "calc",
+#                "output_regr_and_predict": True}
+
+
+#dataset_exp = {"name": "karoutas002_t2",
+#               "dir": EXP_DATA_DIR,
+#               "exclude_filters": ((15, 15),),
+#               "segments_config": ("x**-0.3", 954.0, "x"),
+#               "prediction_points_src": "exp",
+#               "output_regr_and_predict": True}
+#
+#dataset_calc = {"name": "karoutas002_t2",
+#                "dir": CALC_DATA_DIR,
+#                "exclude_filters": ((15, 15),),
+#                "segments_config": ("x**0.4", 954.0, "x**-1"),
+#                "prediction_points_src": "calc",
+#                "output_regr_and_predict": True}
+
+
+#dataset_exp = {"name": "karoutas002_t3",
+#               "dir": EXP_DATA_DIR,
+#               "exclude_filters": ((15, 15),),
+#               "segments_config": ("x**-1.1", 1045.0, "x"),
+#               "prediction_points_src": "exp",
+#               "output_regr_and_predict": True}
+#
+#dataset_calc = {"name": "karoutas002_t3",
+#                "dir": CALC_DATA_DIR,
+#                "exclude_filters": ((15, 15),),
+#                "segments_config": ("x**0.1", 1045.0, "x**-0.8"),
+#                "prediction_points_src": "calc",
+#                "output_regr_and_predict": True}
+
+
+#dataset_exp = {"name": "karoutas002_t4",
+#               "dir": EXP_DATA_DIR,
+#               "exclude_filters": ((15, 15),),
+#               "segments_config": ("x**-1.1", 950.0, "x"),
+#               "prediction_points_src": "exp",
+#               "output_regr_and_predict": True}
+#
+#dataset_calc = {"name": "karoutas002_t4",
+#                "dir": CALC_DATA_DIR,
+#                "exclude_filters": ((15, 15),),
+#                "segments_config": ("x**0.8", 950.0, "x**-1"),
+#                "prediction_points_src": "calc",
+#                "output_regr_and_predict": True}
+
+
+#dataset_exp = {"name": "bosio&imset_exper001",
+#               "dir": EXP_DATA_DIR,
+#               "exclude_filters": (),
+#               "segments_config": ("x**2"),
+#               "prediction_points_src": "exp",
+#               "output_regr_and_predict": True}
+#
+#dataset_calc = {"name": "bosio&imset_exper001",
+#                "dir": CALC_DATA_DIR,
+#                "exclude_filters": (),
+#                "segments_config": ("x+x**2+x**3+x**4+x**5+x**6"),
+#                "prediction_points_src": "exp",
+#                "output_regr_and_predict": True}
+
+
+#dataset_exp = {"name": "wang_exper001",
+#               "dir": EXP_DATA_DIR,
+#               "exclude_filters": (),
+#               "segments_config": ("x**2+x**3"),
+#               "prediction_points_src": "exp",
+#               "output_regr_and_predict": True}
+#
+#dataset_calc = {"name": "wang_exper001",
+#                "dir": CALC_DATA_DIR,
+#                "exclude_filters": (),
+#                "segments_config": ("x+x**2+x**3+x**4+x**5"),
+#                "prediction_points_src": "exp",
+#                "output_regr_and_predict": True}
+
+
+#dataset_exp = {"name": "wang_exper002",
+#               "dir": EXP_DATA_DIR,
+#               "exclude_filters": (),
+#               "segments_config": ("x**2+x**3"),
+#               "prediction_points_src": "exp",
+#               "output_regr_and_predict": True}
+#
+#dataset_calc = {"name": "wang_exper002",
+#                "dir": CALC_DATA_DIR,
+#                "exclude_filters": (),
+#                "segments_config": ("x+x**2+x**3+x**4+x**5"),
+#                "prediction_points_src": "exp",
+#                "output_regr_and_predict": True}
+
+
+#dataset_exp = {"name": "wang_exper003",
+#               "dir": EXP_DATA_DIR,
+#               "exclude_filters": (),
+#               "segments_config": ("x**0.9"),
+#               "prediction_points_src": "exp",
+#               "output_regr_and_predict": True}
+#
+#dataset_calc = {"name": "wang_exper003",
+#                "dir": CALC_DATA_DIR,
+#                "exclude_filters": (),
+#                "segments_config": ("x+x**2+x**3+x**4+x**5"),
+#                "prediction_points_src": "exp",
+#                "output_regr_and_predict": True}
+
+
+#dataset_exp = {"name": "wang_exper004",
+#               "dir": EXP_DATA_DIR,
+#               "exclude_filters": (),
+#               "segments_config": ("x**1"),
+#               "prediction_points_src": "exp",
+#               "output_regr_and_predict": True}
+#
+#dataset_calc = {"name": "wang_exper004",
+#                "dir": CALC_DATA_DIR,
+#                "exclude_filters": (),
+#                "segments_config": ("x+x**2+x**3+x**4+x**5"),
+#                "prediction_points_src": "exp",
+#                "output_regr_and_predict": True}
+
+
+#dataset_exp = {"name": "wang_exper005",
+#               "dir": EXP_DATA_DIR,
+#               "exclude_filters": (),
+#               "segments_config": ("x**0.7"),
+#               "prediction_points_src": "exp",
+#               "output_regr_and_predict": True}
+#
+#dataset_calc = {"name": "wang_exper005",
+#                "dir": CALC_DATA_DIR,
+#                "exclude_filters": (),
+#                "segments_config": ("x+x**2+x**3+x**4+x**5"),
+#                "prediction_points_src": "exp",
+#                "output_regr_and_predict": True}
+
+
+#dataset_exp = {"name": "adiabat_o_exper001",
+#               "dir": EXP_DATA_DIR,
+#               "exclude_filters": (),
+#               "segments_config": ("x+x**2+x**3"),
+#               "prediction_points_src": "exp",
+#               "output_regr_and_predict": True}
+#
+#dataset_calc = {"name": "adiabat_o_exper001",
+#                "dir": CALC_DATA_DIR,
+#                "exclude_filters": (),
+#                "segments_config": ("x+x**2+x**3+x**4+x**5"),
+#                "prediction_points_src": "exp",
+#                "output_regr_and_predict": True}
+
+
+#dataset_exp = {"name": "adiabat_o_exper002",
+#               "dir": EXP_DATA_DIR,
+#               "exclude_filters": (),
+#               "segments_config": ("x**2"),
+#               "prediction_points_src": "exp",
+#               "output_regr_and_predict": True}
+#
+#dataset_calc = {"name": "adiabat_o_exper002",
+#                "dir": CALC_DATA_DIR,
+#                "exclude_filters": ((-1, 0.5),),
+#                "segments_config": ("x+x**2+x**3+x**4+x**5+x**6"),
+#                "prediction_points_src": "exp",
+#                "output_regr_and_predict": True}
+
+
+#dataset_exp = {"name": "adiabat_o_exper003",
+#               "dir": EXP_DATA_DIR,
+#               "exclude_filters": (),
+#               "segments_config": ("x+x**2+x**3"),
+#               "prediction_points_src": "exp",
+#               "output_regr_and_predict": True}
+#
+#dataset_calc = {"name": "adiabat_o_exper003",
+#                "dir": CALC_DATA_DIR,
+#                "exclude_filters": (),
+#                "segments_config": ("x+x**2+x**3+x**4+x**5+x**6"),
+#                "prediction_points_src": "exp",
+#                "output_regr_and_predict": True}
+
+
+#dataset_exp = {"name": "adiabat_o_exper004",
+#               "dir": EXP_DATA_DIR,
+#               "exclude_filters": (),
+#               "segments_config": ("x+x**2+x**3"),
+#               "prediction_points_src": "exp",
+#               "output_regr_and_predict": True}
+#
+#dataset_calc = {"name": "adiabat_o_exper004",
+#                "dir": CALC_DATA_DIR,
+#                "exclude_filters": ((-1, 0.2),),
+#                "segments_config": ("x+x**2+x**3+x**4+x**5+x**6"),
+#                "prediction_points_src": "exp",
+#                "output_regr_and_predict": True}
+
+
+#dataset_exp = {"name": "adiabat_o_exper005",
+#               "dir": EXP_DATA_DIR,
+#               "exclude_filters": (),
+#               "segments_config": ("x+x**2+x**3"),
+#               "prediction_points_src": "exp",
+#               "output_regr_and_predict": True}
+#
+#dataset_calc = {"name": "adiabat_o_exper005",
+#                "dir": CALC_DATA_DIR,
+#                "exclude_filters": (),
+#                "segments_config": ("x+x**2+x**3+x**4+x**5+x**6"),
+#                "prediction_points_src": "exp",
+#                "output_regr_and_predict": True}
+
+
+#dataset_exp = {"name": "adiabat_p_exper002",
+#               "dir": EXP_DATA_DIR,
+#               "exclude_filters": (),
+#               "segments_config": ("x+x**2+x**3"),
+#               "prediction_points_src": "exp",
+#               "output_regr_and_predict": True}
+#
+#dataset_calc = {"name": "adiabat_p_exper002",
+#                "dir": CALC_DATA_DIR,
+#                "exclude_filters": (),
+#                "segments_config": ("x+x**2+x**3+x**4+x**5+x**6"),
+#                "prediction_points_src": "exp",
+#                "output_regr_and_predict": True}
 # ========================================================================
-
-Direction = Enum("Direction", "left right")
-
-
-class InputDataError(Exception):
-    pass
-
-
-class RegrError(Exception):
-    pass
-
-
-class PredictError(Exception):
-    pass
-
-
-def get_nearest_point_index(data, x_value, direction):
-    if direction is Direction.left:
-        point_index = max(data[x_value >= data["x"]].index.tolist())
-    elif direction is Direction.right:
-        point_index = min(data[x_value <= data["x"]].index.tolist())
-
-    return point_index
-
-
-def get_point_indexes_to_drop(data, filters):
-
-    point_indexes = []
-    for (initial_left_bnd, initial_right_bnd) in filters:
-        initial_filter_desc = "{!s}".format((initial_left_bnd, initial_right_bnd))
-
-        try:
-            if isinstance(initial_left_bnd, float):
-                left_bnd = get_nearest_point_index(data, initial_left_bnd, Direction.right)
-            else:
-                left_bnd = initial_left_bnd
-
-            if isinstance(initial_right_bnd, float):
-                right_bnd = get_nearest_point_index(data, initial_right_bnd, Direction.left)
-            else:
-                right_bnd = initial_right_bnd
-        except(ValueError):
-            raise InputDataError("No points to delete in specified range: {}"
-                              .format(initial_filter_desc))
-
-        if (left_bnd > right_bnd) and (right_bnd != -1):
-            raise InputDataError("Boundaries are not ascending in specified range: {!s}"
-                              .format(initial_filter_desc))
-
-        if left_bnd == -1:
-            left_point_index = data.index.min()
-        else:
-            left_point_index = left_bnd
-
-        if right_bnd == -1:
-            right_point_index = data.index.max()
-        else:    
-            right_point_index = right_bnd
-
-        if (left_point_index == 0) or (right_point_index == 0):
-            raise InputDataError("Zero boundary error. Boundary=0 in specified range: {}"
-                              .format(initial_filter_desc))
-
-        if (left_point_index < data.index.min()) or (right_point_index > data.index.max()):
-            raise InputDataError("Filter {0!s} exceeds data range. Data has {1!s} points"
-                              .format(initial_filter_desc, data.index.max()))
-
-        point_indexes.extend(range(left_point_index, right_point_index+1))
-
-    point_indexes = list(set(point_indexes))
-    return point_indexes
-
-
-def get_filtred_data(dataset):
-    data = dataset["data"]
-
-    if "exclude_filters" not in dataset:
-        return data
-
-    filters = dataset["exclude_filters"]
-
-    data.index += 1
-
-    point_indexes_to_drop = get_point_indexes_to_drop(data, filters)
-    data = data.drop(point_indexes_to_drop)
-
-    data.reset_index(drop=True, inplace=True)
-
-    return data
-
-
-def create_segments(full_data, segments_config):
-    if isinstance(segments_config, str):
-        segments_config = (segments_config,)
-
-    full_data_bnd_left = full_data["x"].min()
-    full_data_bnd_right = full_data["x"].max()
-
-    x_values = [full_data_bnd_left] + \
-               [float(val) for val in segments_config if not isinstance(val, str)] + \
-               [full_data_bnd_right]
-
-    regr_functions = [val for val in segments_config if isinstance(val, str)]
-
-    segments = []
-    for (index, regr_func) in enumerate(regr_functions):
-        segment = {"regr_func": regr_func,
-                   "bnd_left": x_values[index],
-                   "bnd_right": x_values[index+1]}
-        segments.append(segment)
-
-    segments = add_data_to_segments(segments, full_data)
-    return segments
-
-
-def add_data_to_segments(segments, full_data):
-    for segment in segments:
-        segment_data = full_data[(segment["bnd_left"] <= full_data["x"]) &
-                                 (full_data["x"] <= segment["bnd_right"])]
-        segment_data = segment_data.reset_index(drop=True)
-
-        if segment_data.empty == True:
-            raise InputDataError("Segment starting at {!s} is empty".format(segment["bnd_left"]))
-
-        segment["segment_data"] = segment_data
-    return segments
-
-
-def get_prediction(data_name, regr_func, data, prediction_points, output_result=True):
-    prediction_points.name = 'x'
-
-    regr_result = rg.ols_fit(regr_func, data)
-    predictions = rg.get_prediction(regr_result, prediction_points, verbose=True)
-
-    if output_result == True:
-        rg.output_regress_results(data_name, data, regr_result)
-        rg.plot_prediction_data(predictions)
-        return predictions
-    elif output_result == False:
-        return predictions
-    else:
-        raise InputDataError("Option: \"output_regr_and_predict\" is incorrect")
-
-
-def add_prediction_point_to_data(datasets):
-    dataset_exp, dataset_calc = datasets[:]
-
-    if dataset_exp["prediction_points_src"] == "exp":
-        dataset_exp["data"] = dataset_exp["data"].assign(predict_points = dataset_exp["data"].x)
-    elif dataset_exp["prediction_points_src"] == "calc":
-        dataset_exp["data"] = dataset_exp["data"].assign(predict_points = dataset_calc["data"].x)
-    else:
-        raise PredictError("Invalid value")
-
-    if dataset_calc["prediction_points_src"] == "calc":
-        dataset_calc["data"] = dataset_calc["data"].assign(predict_points = dataset_calc["data"].x)
-    elif dataset_calc["prediction_points_src"] == "exp":
-        dataset_calc["data"] = dataset_calc["data"].assign(predict_points = dataset_exp["data"].x)
-    else:
-        raise PredictError("Invalid value in \"prediction_points_src\"")
-
-    return datasets
-
-
-#def add_prediction_point_to_segments(datasets):
-#    dataset_exp, dataset_calc = datasets[:]
-#
-#    ziped_segments = zip(dataset_exp["segments"], dataset_calc["segments"])
-#
-#    for segment_exp, segment_calc in ziped_segments:
-#        if dataset_exp["prediction_points_src"] == "exp":
-#            segment_exp["segment_pridiction_point"] = segment_exp["segment_data"]["x"]
-#        elif dataset_exp["prediction_points_src"] == "calc":
-#            segment_exp["segment_pridiction_point"] = segment_calc["segment_data"]["x"]
-#        else:
-#            raise PredictError("Invalid value")
-#
-#        if dataset_calc["prediction_points_src"] == "calc":
-#            segment_calc["segment_pridiction_point"] = segment_calc["segment_data"]["x"]
-#        elif dataset_calc["prediction_points_src"] == "exp":
-#            segment_calc["segment_pridiction_point"] = segment_exp["segment_data"]["x"]
-#        else:
-#            raise PredictError("Invalid value")
-#
-#    return datasets
-
-
-def add_data_and_segments(datasets):
-    for dataset in datasets:
-        dataset["data"] = rg.load_data_csv(dataset["dir"], dataset["name"], sep=";")
-
-        if dataset["data"].empty == True:
-            raise InputDataError("File {!s} is empty".format(dataset["name"] + ".csv"))
-
-        dataset["data"] = get_filtred_data(dataset)
-
-    datasets = add_prediction_point_to_data(datasets)
-
-    for dataset in datasets:
-        dataset["segments"] = create_segments(dataset["data"], dataset["segments_config"])
-
-    return datasets
-
-
-def add_prediction_result(datasets):
-    for dataset in datasets:
-        for segment in dataset["segments"]:
-            prediction = get_prediction(dataset["name"],
-                                        segment["regr_func"],
-                                        segment["segment_data"],
-                                        segment["segment_data"]["predict_points"],
-                                        output_result=dataset.get("output_regr_and_predict"))
-
-            segment["prediction"] = prediction
-
-    return datasets
-
-
-def save_prediction(datasets):
-    dataset_exp, dataset_calc = datasets[:]
-
-    ziped_segments = zip(dataset_exp["segments"], dataset_calc["segments"])
-
-    segment_num = 0
-    for segment_exp, segment_calc in ziped_segments:
-        segment_exp["segment_data"]["y"].name = "exp"
-        segment_calc["segment_data"]["y"].name = "CORTES"
-
-        predictions = pd.concat([segment_exp["prediction"]["x"],
-                                 segment_calc["segment_data"]["y"],
-                                 segment_exp["segment_data"]["y"],
-                                 segment_exp["prediction"]["mean"],
-                                 segment_exp["prediction"]["deriv"],
-                                 segment_exp["prediction"]["mean_ci"],
-                                 segment_exp["prediction"]["mean_se"],
-                                 segment_exp["prediction"]["mean_ci_lower"],
-                                 segment_exp["prediction"]["mean_ci_upper"],
-                                 segment_exp["prediction"]["mean_se_lower"],
-                                 segment_exp["prediction"]["mean_se_upper"]],
-                                axis=1)
-
-        print(predictions)
-
-        segment_num += 1
-        segment_exp_name = "{}_segm_{}".format(dataset_exp["name"], str(segment_num))
-        srv.save_dataframe_csv(OUT_DIR, segment_exp_name, predictions, sep=";")
 
 
 def plot_segments(datasets):
@@ -383,10 +394,10 @@ def plot_segments(datasets):
 if __name__ == "__main__":
     datasets = (dataset_exp, dataset_calc)
 
-    datasets = add_data_and_segments(datasets)
+    datasets = dproc.add_data_and_segments(datasets)
+
+    datasets = rg.add_prediction_result(datasets)
 
     plot_segments(datasets)
 
-    datasets = add_prediction_result(datasets)
-
-    save_prediction(datasets)
+    rg.save_prediction(OUT_DIR, datasets)
