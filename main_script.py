@@ -364,6 +364,21 @@ OUT_DIR = r"..\Out"
 #                "segments_config": ("x+x**2+x**3+x**4+x**5+x**6"),
 #                "prediction_points_src": "exp",
 #                "output_regr_and_predict": True}
+
+
+#dataset_exp = {"name": "tarasova_exper001",
+#               "dir": EXP_DATA_DIR,
+#               "exclude_filters": (),
+#               "segments_config": ("x**-1+x+x**2"),
+#               "prediction_points_src": "exp",
+#               "output_regr_and_predict": True}
+#
+#dataset_calc = {"name": "tarasova_exper001",
+#                "dir": CALC_DATA_DIR,
+#                "exclude_filters": (),
+#                "segments_config": ("x+x**2+x**3+x**4+x**5+x**6"),
+#                "prediction_points_src": "exp",
+#                "output_regr_and_predict": True}
 # ========================================================================
 
 
@@ -383,7 +398,7 @@ def plot_segments(datasets):
             prediction_points = pd.Series(prediction_points, name="x")
 
             regr_result = rg.ols_fit(segment["regr_func"], segment["segment_data"])
-            prediction = rg.get_prediction(regr_result, prediction_points, verbose=True)
+            prediction = rg.get_prediction(regr_result, prediction_points, verbose=False)
 
             label = "OLS prediction: ({}-{})".format(round(segment["bnd_left"], 1),
                                                      round(segment["bnd_right"], 1))

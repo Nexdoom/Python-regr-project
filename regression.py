@@ -210,7 +210,7 @@ def save_prediction(out_dir, datasets):
                                  segment_exp["prediction"]["mean_se_upper"]],
                                 axis=1)
 
-        predictions = predictions.drop_duplicates(subset=['x', 'calc', 'deriv', 'mean_ci'], keep = False)
+        predictions = predictions.dropna(how='all')
 
         print(predictions)
 
