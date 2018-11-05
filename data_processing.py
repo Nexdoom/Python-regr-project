@@ -14,7 +14,7 @@ def load_data_csv(data_dir, data_name, sep=","):
 	data_file_name = data_name + ".csv"
 	data_file_path = os.path.join(data_dir, data_file_name)
 	data = pd.read_csv(data_file_path, names=["x","y"], sep=sep)
-	data = data.sort_values("x").reset_index(drop=True)
+	data.sort_values("x").reset_index(drop=True, inplace=True)
 	return data
 
 
@@ -92,7 +92,7 @@ def get_filtred_data(dataset):
     data.index += 1
 
     point_indexes_to_drop = get_point_indexes_to_drop(data, filters)
-    data = data.drop(point_indexes_to_drop)
+    data.drop(point_indexes_to_drop, inplace=True)
 
     data.reset_index(drop=True, inplace=True)
 
@@ -103,7 +103,7 @@ def add_data_to_segments(segments, full_data):
     for segment in segments:
         segment_data = full_data[(segment["bnd_left"] <= full_data["x"]) &
                                  (full_data["x"] <= segment["bnd_right"])]
-        segment_data = segment_data.reset_index(drop=True)
+        segment_data.reset_index(drop=True, inplace=True)
 
         if segment_data.empty == True:
             raise InputDataError("Segment starting at {!s} is empty".format(segment["bnd_left"]))
@@ -170,7 +170,7 @@ def add_prediction_point_to_segments(segments, prediction_points):
             segment_prediction_points = prediction_points[(segment["bnd_left"] <= prediction_points) &
                                                           (prediction_points <= segment["bnd_right"])]
         
-        segment_prediction_points = segment_prediction_points.reset_index(drop=True)
+        segment_prediction_points.reset_index(drop=True, inplace=True)
         
         if segment_prediction_points.empty == True:
             raise InputDataError("Segment starting at {!s} is empty".format(segment["bnd_left"]))

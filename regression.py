@@ -160,7 +160,7 @@ def plot_prediction_data(predictions):
 	ax.legend(loc="best")
 
 
-def add_prediction_result(datasets, output_result=True):
+def add_prediction_result(datasets):
     for dataset in datasets:
         for segment in dataset["segments"]:
             regr_result = ols_fit(segment["regr_func"], segment["segment_data"])
@@ -173,7 +173,9 @@ def add_prediction_result(datasets, output_result=True):
             elif output_result == False:
                 pass
             else:
-                raise InputDataError("Option: \"output_regr_and_predict\" is incorrect")
+                print("Warning! Option: \"output_regr_and_predict\" not entered, default=True")
+                output_regress_results(dataset["name"], segment["segment_data"], regr_result)
+                plot_prediction_data(prediction)
 
             segment["prediction"] = prediction
 
@@ -210,7 +212,7 @@ def save_prediction(out_dir, datasets):
                                  segment_exp["prediction"]["mean_se_upper"]],
                                 axis=1)
 
-        predictions = predictions.dropna(how='all')
+        predictions.dropna(how='all', inplace=True)
 
         print(predictions)
 
