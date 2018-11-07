@@ -35,12 +35,6 @@ def print_regress_stats(data_name, regr_result):
 
 	print(regr_result.summary())
 
-	#print("\n==============================================================================")
-	#print('=== Coefs ===\n', regr_result.params)
-	#print("\n=== Coefs std errors ===\n", regr_result.bse)
-	#print("\n=== Coefs confidence interval (P=0.95) ===:\n", regr_result.conf_int(alpha=0.05))
-	#print("==============================================================================")
-
 
 def plot_regress_stats(regr_result):
 	fig = plt.figure(figsize=(12, 8))
