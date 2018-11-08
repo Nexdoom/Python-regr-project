@@ -176,25 +176,15 @@ def add_prediction_result(datasets):
     return datasets
 
 
-def save_prediction(out_dir, datasets):
-    dataset_exp, dataset_calc = datasets[:]
-
-    ziped_segments = zip(dataset_exp["segments"], dataset_calc["segments"])
-
-    segment_num = 0
-    for segment_exp, segment_calc in ziped_segments:
+def concat_segments_predictions(dataset_exp, dataset_calc):
+    exp_segment_num = 0
+    segments_exp_predictions = []
+    for segment_exp in dataset_exp["segments"]:
         segment_exp["segment_data"]["y"].name = "exp"
         segment_exp["prediction"]["mean"].name = "exp_mean"
 
-        if dataset_calc["prediction_points_src"] == "calc":
-            segment_calc["segment_data"]["y"].name = "calc"
-            calc_values = segment_calc["segment_data"]["y"]
-        else:
-            segment_calc["prediction"]["mean"].name = "calc"
-            calc_values = segment_calc["prediction"]["mean"]
-
+        exp_segment_num += 1
         predictions = pd.concat([segment_exp["prediction"]["x"],
-                                 calc_values,
                                  segment_exp["segment_data"]["y"],
                                  segment_exp["prediction"]["mean"],
                                  segment_exp["prediction"]["deriv"],
@@ -204,12 +194,50 @@ def save_prediction(out_dir, datasets):
                                  segment_exp["prediction"]["mean_ci_upper"],
                                  segment_exp["prediction"]["mean_se_lower"],
                                  segment_exp["prediction"]["mean_se_upper"]],
-                                axis=1)
+                                axis=1,)
 
-        predictions.dropna(how='all', inplace=True)
+        predictions.index += 1
+        segments_exp_predictions.append(predictions)
 
-        print(predictions)
+    summary_segment_predictions = pd.concat(segments_exp_predictions,
+                                            keys = range(1, exp_segment_num+1),
+                                            names = ["exp segment number", "index"])
 
-        segment_num += 1
-        segment_exp_name = "{}_segm_{}".format(dataset_exp["name"], str(segment_num))
-        dproc.save_dataframe_csv(out_dir, segment_exp_name, predictions, sep=";")
+    calc_segment_num = 0
+    segments_calc_predictions = []
+    for segment_calc in dataset_calc["segments"]:
+        if dataset_calc["prediction_points_src"] == "calc":
+            calc_values = segment_calc["segment_data"]["y"]
+        elif dataset_calc["prediction_points_src"] == "exp":
+            calc_values = segment_calc["prediction"]["mean"]
+
+        calc_segment_num += 1
+        segments_calc_predictions.append(calc_values)
+
+
+    summary_segment_calc_predictions = pd.concat(segments_calc_predictions,
+                                                 keys = range(1, calc_segment_num+1),
+                                                 names = ["calc segment number", "index"])
+
+    try:
+        summary_segment_predictions.insert(loc=0,
+                                       column="calc segment number",
+                                       value=summary_segment_calc_predictions.keys().get_level_values(0).tolist())
+
+        summary_segment_predictions.insert(loc=2,
+                                           column="calc",
+                                           value=summary_segment_calc_predictions.values)
+    except(ValueError):
+        raise InputDataError("Amount of exp and calc points do not match")
+
+    summary_segment_predictions.reset_index(level=0, inplace=True)
+    return summary_segment_predictions
+
+
+def save_prediction(out_dir, datasets):
+    dataset_exp, dataset_calc = datasets[:]
+
+    summary_predictions = concat_segments_predictions(dataset_exp, dataset_calc)
+
+    segment_exp_name = "{}".format(dataset_exp["name"])
+    dproc.save_dataframe_csv(out_dir, segment_exp_name, summary_predictions, sep=";")

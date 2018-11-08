@@ -59,13 +59,6 @@ OUT_DIR = r"..\Out"
 #REGR_FUNC_EXP = "x"
 
 
-#dataset_calc = {"name": "Empty",
-#                "dir": CALC_DATA_DIR,
-#                "exclude_filters": ((1, 5),),
-#                "segments_config": ("x**0.2", 1020.0, "x**-1"),
-#                "output_regr_and_predict": True}
-
-
 #dataset_exp = {"name": "karoutas001_t1",
 #               "dir": EXP_DATA_DIR,
 #               "exclude_filters": (),

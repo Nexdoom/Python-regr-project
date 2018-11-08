@@ -41,20 +41,27 @@ def get_point_indexes_to_drop(data, filters):
         try:
             if isinstance(initial_left_bnd, float):
                 left_bnd = get_nearest_point_index(data, initial_left_bnd, Direction.right)
-            else:
+            elif isinstance(initial_left_bnd, int):
                 left_bnd = initial_left_bnd
+            else:
+                raise InputDataError("Filter not supported {!s}"
+                                     .format(type(initial_left_bnd).__name__))
 
             if isinstance(initial_right_bnd, float):
                 right_bnd = get_nearest_point_index(data, initial_right_bnd, Direction.left)
-            else:
+            elif isinstance(initial_right_bnd, int):
                 right_bnd = initial_right_bnd
+            else:
+                raise InputDataError("Filter not supported {!s}"
+                                     .format(type(initial_right_bnd).__name__))
+
         except(ValueError):
-            raise InputDataError("No points to delete in specified range: {}"
-                              .format(initial_filter_desc))
+            raise InputDataError("FIlter is incorrect: {}"
+                                 .format(initial_filter_desc))
 
         if (left_bnd > right_bnd) and (right_bnd != -1):
             raise InputDataError("Boundaries are not ascending in specified range: {!s}"
-                              .format(initial_filter_desc))
+                                 .format(initial_filter_desc))
 
         if left_bnd == -1:
             left_point_index = data.index.min()
@@ -68,11 +75,11 @@ def get_point_indexes_to_drop(data, filters):
 
         if (left_point_index == 0) or (right_point_index == 0):
             raise InputDataError("Zero boundary error. Boundary=0 in specified range: {}"
-                              .format(initial_filter_desc))
+                                 .format(initial_filter_desc))
 
         if (left_point_index < data.index.min()) or (right_point_index > data.index.max()):
             raise InputDataError("Filter {0!s} exceeds data range. Data has {1!s} points"
-                              .format(initial_filter_desc, data.index.max()))
+                                 .format(initial_filter_desc, data.index.max()))
 
         point_indexes.extend(range(left_point_index, right_point_index+1))
 
