@@ -1,3 +1,4 @@
+#-*- coding: utf-8 -*-
 import os
 import pandas as pd
 from enum import Enum
@@ -19,8 +20,10 @@ def load_data_csv(data_dir, data_name, sep=","):
 
 
 def save_dataframe_csv(dir_name, dataframe_name, dataframe, header=True, sep=","):
-	file_path = os.path.join(dir_name, dataframe_name + ".csv")
-	dataframe.to_csv(file_path, index=False, header=header, sep=sep)
+    if not os.access(dir_name, os.F_OK):
+        os.makedirs(dir_name)
+    file_path = os.path.join(dir_name, dataframe_name + ".csv")
+    dataframe.to_csv(file_path, index=False, header=header, sep=sep)
 
 
 def get_nearest_point_index(data, x_value, direction):
@@ -194,7 +197,7 @@ def add_data_and_segments(datasets):
         if dataset["data"].empty == True:
             raise InputDataError("File {!s} is empty".format(dataset["name"] + ".csv"))
 
-        dataset["data"] = dataset["data"].drop_duplicates(subset=['x', 'y'], keep="first")
+        dataset["data"].drop_duplicates(subset=['x', 'y'], keep="first", inplace=True)
         dataset["data"].reset_index(drop=True, inplace=True)
 
         dataset["data"] = get_filtred_data(dataset)
